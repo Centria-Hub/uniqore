@@ -13,127 +13,85 @@ import {
   MapPin,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import directus from '@/lib/directus'
+import { readItems } from '@directus/sdk'
 
 type post = {
   id: number
   slug: string
   title: string
   image: string
-  date: string
+  date_created: string
   tags: string[]
-  isEvent: boolean
-  eventDate: string
-  eventLocation: string
-  eventTime: string
+  //isEvent: boolean
+  time: string
+  //eventLocation: string
+  //eventTime: string
 }
 
-// Sample blog post data with slugs and event information
-const blogPosts: post[] = [
-  {
-    id: 1,
-    slug: 'future-web-development-trends-2025',
-    title: 'The Future of Web Development: Trends to Watch in 2025',
-    image: '/hero.png',
-    date: '2025-04-09',
-    tags: ['Web Development', 'AI', 'Edge Computing'],
-    isEvent: true,
-    eventDate: '2025-05-15',
-    eventLocation: 'Tech Hub, San Francisco',
-    eventTime: '9:00 AM - 5:00 PM',
-  },
-  {
-    id: 2,
-    slug: 'building-accessible-uis-best-practices',
-    title: 'Building Accessible UIs: Best Practices for Inclusive Design',
-    image: '/hero.png',
-    date: '2025-03-22',
-    tags: ['Accessibility', 'UI Design', 'Web Development'],
-    isEvent: true,
-    eventDate: '2025-04-18',
-    eventLocation: 'Design Center, Chicago',
-    eventTime: '10:00 AM - 4:00 PM',
-  },
-  {
-    id: 4,
-    slug: 'optimizing-performance-nextjs-applications',
-    title: 'Optimizing Performance in Next.js Applications',
-    image: '/hero.png',
-    date: '2025-02-28',
-    tags: ['Next.js', 'Performance', 'Web Development'],
-    isEvent: true,
-    eventDate: '2025-03-25',
-    eventLocation: 'Virtual Event',
-    eventTime: '1:00 PM - 3:00 PM',
-  },
-  {
-    id: 7,
-    slug: 'mastering-css-grid-layout',
-    title: 'Mastering CSS Grid Layout',
-    image: '/hero.png',
-    date: '2025-01-15',
-    tags: ['CSS', 'Web Development', 'Layout'],
-    isEvent: true,
-    eventDate: '2025-02-10',
-    eventLocation: 'Creative Space, Portland',
-    eventTime: '9:30 AM - 4:30 PM',
-  },
-  {
-    id: 10,
-    slug: 'complete-guide-web-accessibility',
-    title: 'The Complete Guide to Web Accessibility',
-    image: '/hero.png',
-    date: '2024-11-22',
-    tags: ['Accessibility', 'Web Development', 'UI Design'],
-    isEvent: true,
-    eventDate: '2024-12-15',
-    eventLocation: 'Inclusion Center, Boston',
-    eventTime: '10:00 AM - 5:00 PM',
-  },
-  {
-    id: 13,
-    slug: 'server-components-future-of-react',
-    title: 'Server Components: The Future of React',
-    image: '/hero.png',
-    date: '2024-10-15',
-    tags: ['React', 'Server Components', 'Web Development'],
-    isEvent: true,
-    eventDate: '2024-11-05',
-    eventLocation: 'React Conference, Seattle',
-    eventTime: '9:00 AM - 6:00 PM',
-  },
-  {
-    id: 16,
-    slug: 'building-realtime-applications-websockets',
-    title: 'Building Real-time Applications with WebSockets',
-    image: '/hero.png',
-    date: '2024-08-28',
-    tags: ['WebSockets', 'Real-time', 'Web Development'],
-    isEvent: true,
-    eventDate: '2024-09-20',
-    eventLocation: 'Tech Campus, Austin',
-    eventTime: '1:00 PM - 5:00 PM',
-  },
-]
+// Fetch events data
+const fetchEvents = async () => {
+	return directus.request(readItems('events'))
+}
+
+// Fetch events_tags data
+const fetchEventsTags = async () => {
+	return directus.request(readItems('events_tags'))
+}
+
+// Fetch tags data
+const fetchTags = async () => {
+	return directus.request(readItems('tags'))
+}
+
+// Fetch events data with tags
+const fetchEventsWithTags = async () => {
+  try {
+    const [events, eventsTags, tags] = await Promise.all([
+      fetchEvents(),
+      fetchEventsTags(),
+      fetchTags(),
+    ])
+
+    // Map tags to their corresponding tag strings
+    const tagMap = tags.reduce((acc: Record<number, string>, tag: any) => {
+      acc[tag.id] = tag.tag
+      return acc
+    }, {})
+
+    // Map events_tags to events items
+    const eventsWithTags = events.map((item: any) => {
+      const relatedTags = eventsTags
+        .filter((eventsTag: any) => eventsTag.events_id === item.id)
+        .map((eventsTag: any) => tagMap[eventsTag.tags_id] || '')
+
+      return {
+        ...item,
+        tags: relatedTags.filter(Boolean), // Remove empty tags
+      }
+    })
+
+    return eventsWithTags
+  } catch (err) {
+    console.error('Error fetching events with tags:', err)
+    return []
+  }
+}
 
 // Filter to only include events
-const eventPosts = blogPosts.filter((post) => post.isEvent)
-
-// Get all unique tags from event posts
-const allTags = Array.from(
-  new Set(eventPosts.flatMap((post) => post.tags))
-).sort()
+// const eventPosts = blogPosts.filter((post) => post.isEvent)
 
 // Number of posts per page
 const POSTS_PER_PAGE = 12
 
 // Function to generate Google Calendar URL
 const generateGoogleCalendarUrl = (post: post) => {
-  // Parse event date and time
-  const [startTime, endTime] = post.eventTime.split(' - ')
-  const eventDate = post.eventDate
+  // Parse event start date and time
+  const startDateTime = new Date(post.time)
 
-  const startDateTime = new Date(`${eventDate} ${startTime}`)
-  const endDateTime = new Date(`${eventDate} ${endTime}`)
+  // Calculate end time (default duration: 1 hour)
+  const endDateTime = new Date(startDateTime)
+  endDateTime.setHours(endDateTime.getHours() + 1)
 
   // Format dates for Google Calendar
   const formatDate = (date: Date) => {
@@ -144,7 +102,7 @@ const generateGoogleCalendarUrl = (post: post) => {
     action: 'TEMPLATE',
     text: post.title,
     details: `${post.title} - Learn more at our website.`,
-    location: post.eventLocation,
+    //location: post.eventLocation,
     dates: `${formatDate(startDateTime)}/${formatDate(endDateTime)}`,
   })
 
@@ -159,10 +117,42 @@ export default function Events() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [displayedPosts, setDisplayedPosts] = useState<post[]>([])
+  const [blogPosts, setBlogPost] = useState<post[]>([])
+
+  // Retreive events data
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const data = await fetchEventsWithTags()
+        setBlogPost(
+          data.map((item: Record<string, any>) => ({
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            image: item.image,
+            date_created: item.date_created,
+            tags: item.tags,
+            // isEvent: boolean
+            time: item.time,
+            //eventLocation: string
+            //eventTime: string
+          }))
+        )
+      } catch (err: any) {
+        console.error('Error fetching news:', err)
+      }
+    }
+    loadEvents()
+  }, [])
+
+  // Get all unique tags from event posts
+  const allTags = Array.from(
+    new Set(blogPosts.flatMap((post) => post.tags))
+  ).sort()
 
   // Apply filters and sorting
   useEffect(() => {
-    let result = [...eventPosts]
+    let result = [...blogPosts]
 
     // Filter by selected tags
     if (selectedTags.length > 0) {
@@ -171,17 +161,17 @@ export default function Events() {
       )
     }
 
-    // Sort by event date instead of published date
+    // Sort by date
     result.sort((a, b) => {
-      const dateA = new Date(a.eventDate).getTime()
-      const dateB = new Date(b.eventDate).getTime()
-      return sortOrder === 'newest' ? dateA - dateB : dateB - dateA
+      const dateA = new Date(a.date_created).getTime()
+      const dateB = new Date(b.date_created).getTime()
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB
     })
 
     setFilteredPosts(result)
     setTotalPages(Math.ceil(result.length / POSTS_PER_PAGE))
     setCurrentPage(1) // Reset to first page when filters change
-  }, [selectedTags, sortOrder])
+  }, [blogPosts, selectedTags, sortOrder])
 
   // Update displayed posts when page or filtered posts change
   useEffect(() => {
@@ -226,6 +216,8 @@ export default function Events() {
       year: 'numeric',
     })
   }
+
+  console.log('blogPosts', blogPosts)
 
   return (
     <div className='min-h-screen pt-24'>
@@ -327,7 +319,7 @@ export default function Events() {
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
                   <Image
-                    src={post.image || '/placeholder.svg'}
+                    src={`https://api.hub.solo-web.studio/assets/${post.image}` || '/placeholder.svg'}
                     alt={post.title}
                     fill
                     className='object-cover'
@@ -347,7 +339,7 @@ export default function Events() {
                       <div className='backdrop-blur-md bg-black/30 rounded-lg px-3 py-2 self-start flex items-center'>
                         <Calendar className='h-4 w-4 mr-2 text-white' />
                         <span className='text-white text-sm font-medium'>
-                          {formatEventDate(post.eventDate)}
+                          {formatEventDate(post.time)}
                         </span>
                       </div>
 
@@ -379,29 +371,26 @@ export default function Events() {
                         {/* Event time and location (compact) */}
                         <div className='flex items-center mt-2 text-white/90 text-xs'>
                           <Clock className='h-3 w-3 mr-1' />
-                          <span className='mr-3'>{post.eventTime}</span>
+                          <span className='mr-3'>{formatEventDate(post.time)}</span>
                           <MapPin className='h-3 w-3 mr-1' />
-                          <span className='truncate'>{post.eventLocation}</span>
+                          <span className='truncate'></span>
                         </div>
                       </div>
 
                       {/* Add to Calendar button */}
                       <div className='flex justify-end'>
-                        <a
-                          href={generateGoogleCalendarUrl(post)}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='backdrop-blur-md bg-rose-600/80 hover:bg-rose-600 px-3 py-1.5 text-white text-xs rounded-lg transition-colors flex items-center justify-center'
+                        <div
                           onClick={(e) => {
                             e.preventDefault()
                             window.open(
                               generateGoogleCalendarUrl(post),
                               '_blank'
                             )
-                          }}>
+                          }}
+                          className='backdrop-blur-md bg-rose-600/80 hover:bg-rose-600 px-3 py-1.5 text-white text-xs rounded-lg transition-colors flex items-center justify-center cursor-pointer'>
                           <Calendar className='h-3 w-3 mr-1' />
                           Add to Calendar
-                        </a>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -80,8 +80,12 @@ export default function News() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false)
   const [blogPosts, setBlogPost] = useState<post[]>([])
+  const [filteredPosts, setFilteredPosts] = useState<post[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [displayedPosts, setDisplayedPosts] = useState<post[]>([])
 
-  // Retreive news data using Tanstack query
+  // Retreive news data
   useEffect(() => {
     const loadNews = async () => {
       try {
@@ -107,12 +111,7 @@ export default function News() {
   const allTags = Array.from(
     new Set(blogPosts.flatMap((post) => post.tags))
   ).sort()
-
-  const [filteredPosts, setFilteredPosts] = useState<post[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [displayedPosts, setDisplayedPosts] = useState<post[]>([])
-
+  
   // Apply filters and sorting
   useEffect(() => {
     let result = [...blogPosts]
@@ -270,7 +269,7 @@ export default function News() {
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${post.image}`}
+                    src={`https://api.hub.solo-web.studio/assets/${post.image}` || '/placeholder.svg'}
                     alt={post.title}
                     fill
                     className='object-cover'
