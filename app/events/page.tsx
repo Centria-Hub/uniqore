@@ -23,10 +23,9 @@ type post = {
   image: string
   date_created: string
   tags: string[]
-  //isEvent: boolean
   time: string
-  //eventLocation: string
-  //eventTime: string
+  location: string
+  end_time: string
 }
 
 // Fetch events data
@@ -78,20 +77,14 @@ const fetchEventsWithTags = async () => {
   }
 }
 
-// Filter to only include events
-// const eventPosts = blogPosts.filter((post) => post.isEvent)
-
 // Number of posts per page
 const POSTS_PER_PAGE = 12
 
 // Function to generate Google Calendar URL
 const generateGoogleCalendarUrl = (post: post) => {
-  // Parse event start date and time
+  // Parse event start/end dates
   const startDateTime = new Date(post.time)
-
-  // Calculate end time (default duration: 1 hour)
-  const endDateTime = new Date(startDateTime)
-  endDateTime.setHours(endDateTime.getHours() + 1)
+  const endDateTime = new Date(post.end_time)
 
   // Format dates for Google Calendar
   const formatDate = (date: Date) => {
@@ -102,7 +95,7 @@ const generateGoogleCalendarUrl = (post: post) => {
     action: 'TEMPLATE',
     text: post.title,
     details: `${post.title} - Learn more at our website.`,
-    //location: post.eventLocation,
+    location: post.location,
     dates: `${formatDate(startDateTime)}/${formatDate(endDateTime)}`,
   })
 
@@ -132,11 +125,10 @@ export default function Events() {
             image: item.image,
             date_created: item.date_created,
             tags: item.tags,
-            // isEvent: boolean
             time: item.time,
-            //eventLocation: string
-            //eventTime: string
-          }))
+            location: item.location,
+            end_time: item.end_time,
+          }))   
         )
       } catch (err: any) {
         console.error('Error fetching news:', err)
@@ -314,7 +306,7 @@ export default function Events() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}>
               <Link
-                href={`/post/${post.slug}`}
+                href={`/events/${post.slug}`}
                 className='block h-full group'>
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
@@ -371,9 +363,11 @@ export default function Events() {
                         {/* Event time and location (compact) */}
                         <div className='flex items-center mt-2 text-white/90 text-xs'>
                           <Clock className='h-3 w-3 mr-1' />
-                          <span className='mr-3'>{formatEventDate(post.time)}</span>
+                          <span className='mr-3'>
+                            {new Date(post.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(post.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                           <MapPin className='h-3 w-3 mr-1' />
-                          <span className='truncate'></span>
+                          <span className='truncate'>{post.location}</span>
                         </div>
                       </div>
 
