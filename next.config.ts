@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
         hostname: 'randomuser.me',
         protocol: 'https',
       },
+      {
+				protocol: 'https',
+				hostname: 'api.hub.solo-web.studio',
+				pathname: '/assets/**',
+			},
     ],
   },
 }
