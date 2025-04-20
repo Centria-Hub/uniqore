@@ -146,7 +146,7 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
     <main className='relative min-h-screen w-full'>
       <div className='relative w-full h-[70vh]'>
         <Image
-          src={`https://api.hub.solo-web.studio/assets/${image}` || '/placeholder.svg'}
+          src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${image}` || '/placeholder.svg'}
           alt={title}
           fill
           priority

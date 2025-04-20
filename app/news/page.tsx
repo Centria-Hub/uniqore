@@ -269,7 +269,7 @@ export default function News() {
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
                   <Image
-                    src={`https://api.hub.solo-web.studio/assets/${post.image}` || '/placeholder.svg'}
+                    src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${post.image}` || '/placeholder.svg'}
                     alt={post.title}
                     fill
                     className='object-cover'

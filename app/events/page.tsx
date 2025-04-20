@@ -209,8 +209,6 @@ export default function Events() {
     })
   }
 
-  console.log('blogPosts', blogPosts)
-
   return (
     <div className='min-h-screen pt-24'>
       <div className='max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8'>
@@ -311,7 +309,7 @@ export default function Events() {
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
                   <Image
-                    src={`https://api.hub.solo-web.studio/assets/${post.image}` || '/placeholder.svg'}
+                    src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${post.image}` || '/placeholder.svg'}
                     alt={post.title}
                     fill
                     className='object-cover'
@@ -361,9 +359,9 @@ export default function Events() {
                         </h2>
 
                         {/* Event time and location (compact) */}
-                        <div className='flex items-center mt-2 text-white/90 text-xs'>
+                        <div className='flex items-center mt-2 text-white/90 text-xs'>  
                           <Clock className='h-3 w-3 mr-1' />
-                          <span className='mr-3'>
+                          <span className='mr-3 whitespace-nowrap'>
                             {new Date(post.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(post.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           <MapPin className='h-3 w-3 mr-1' />
