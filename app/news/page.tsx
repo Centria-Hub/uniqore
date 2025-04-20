@@ -264,7 +264,7 @@ export default function News() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}>
               <Link
-                href={`/post/${post.slug}`}
+                href={`/news/${post.slug}`}
                 className='block h-full'>
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}

@@ -155,10 +155,10 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
             {/* Posted date */}
             <div className='text-white/90 text-sm'>
               {new Date(date_created).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
             </div>
 
             {/* Tags */}
