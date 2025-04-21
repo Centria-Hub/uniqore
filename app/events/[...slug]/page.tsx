@@ -25,25 +25,25 @@ type post = {
 }
 
 const fetchEvents = async (slug: string) => {
-	try {
-		return directus.request(
-			readItems('events', {
-				filter: { slug: { _eq: slug } },
-			})
-		)
-	} catch {
-		notFound()
-	}
+  try {
+    return directus.request(
+      readItems('events', {
+        filter: { slug: { _eq: slug } },
+      })
+    )
+  } catch {
+    notFound()
+  }
 }
 
 // Fetch events_tags
 const fetchEventsTags = async () => {
-	return directus.request(readItems('events_tags'))
+  return directus.request(readItems('events_tags'))
 }
 
 // Fetch tags
 const fetchTags = async () => {
-	return directus.request(readItems('tags'))
+  return directus.request(readItems('tags'))
 }
 
 // Fetch events data with tags
@@ -80,14 +80,18 @@ const fetchEventsWithTags = async (slug: string) => {
   }
 }
 
-export default function SinglePost({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
-  const slugValue = Array.isArray(slug) ? slug[0] : slug;
+export default function SinglePost({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = use(params)
+  const slugValue = Array.isArray(slug) ? slug[0] : slug
   const [postData, setPostData] = useState<post>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const events = await fetchEventsWithTags(slugValue)
@@ -119,7 +123,18 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
     notFound()
   }
 
-  const { title, content, tags, date_created, image, short_description, time, location, fee, end_time } = postData as post
+  const {
+    title,
+    content,
+    tags,
+    date_created,
+    image,
+    short_description,
+    time,
+    location,
+    fee,
+    end_time,
+  } = postData as post
 
   const generateGoogleCalendarUrl = () => {
     // Parse event start/end dates
@@ -146,7 +161,10 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
     <main className='relative min-h-screen w-full'>
       <div className='relative w-full h-[70vh]'>
         <Image
-          src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${image}` || '/placeholder.svg'}
+          src={
+            `${process.env.NEXT_PUBLIC_URL}/assets/${image}` ||
+            '/placeholder.svg'
+          }
           alt={title}
           fill
           priority
@@ -214,9 +232,15 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
             <div className='flex flex-col gap-2'>
               <div className='flex items-center text-sm '>
                 <Calendar className='h-4 w-4 mr-2' />
-                <span>{time.split('T')[0].split('-').join("/")} - {end_time.split('T')[0].split('-').join("/")}</span>
+                <span>
+                  {time.split('T')[0].split('-').join('/')} -{' '}
+                  {end_time.split('T')[0].split('-').join('/')}
+                </span>
                 <Clock className='h-4 w-4 ml-4 mr-2' />
-                <span>{time.split('T')[1].split(':').slice(0, 2).join(':')} - {end_time.split('T')[1].split(':').slice(0, 2).join(':')}</span>
+                <span>
+                  {time.split('T')[1].split(':').slice(0, 2).join(':')} -{' '}
+                  {end_time.split('T')[1].split(':').slice(0, 2).join(':')}
+                </span>
               </div>
               <div className='flex items-center text-sm'>
                 <MapPin className='h-4 w-4 mr-2' />
@@ -248,9 +272,7 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
             delay: 0.2,
           }}>
           <div className='prose max-w-none'>
-            <p className='lead text-lg  mb-6'>
-              {short_description}
-            </p>
+            <p className='lead text-lg  mb-6'>{short_description}</p>
 
             <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>

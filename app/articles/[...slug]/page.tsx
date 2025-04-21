@@ -22,25 +22,25 @@ type post = {
 
 // Fetch article data
 const fetchArticles = async (slug: string) => {
-	try {
-		return directus.request(
-			readItems('articles', {
-				filter: { slug: { _eq: slug } },
-			})
-		)
-	} catch {
-		notFound()
-	}
+  try {
+    return directus.request(
+      readItems('articles', {
+        filter: { slug: { _eq: slug } },
+      })
+    )
+  } catch {
+    notFound()
+  }
 }
 
 // Fetch articles_tags data
 const fetchArticlesTags = async () => {
-	return directus.request(readItems('articles_tags'))
+  return directus.request(readItems('articles_tags'))
 }
 
 // Fetch tags data
 const fetchTags = async () => {
-	return directus.request(readItems('tags'))
+  return directus.request(readItems('tags'))
 }
 
 // Fetch article data with tags
@@ -77,9 +77,13 @@ const fetchArticlesWithTags = async (slug: string) => {
   }
 }
 
-export default function SinglePost({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
-  const slugValue = Array.isArray(slug) ? slug[0] : slug;
+export default function SinglePost({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = use(params)
+  const slugValue = Array.isArray(slug) ? slug[0] : slug
   const [postData, setPostData] = useState<post>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -116,13 +120,17 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
     notFound()
   }
 
-  const { title, content, tags, date_created, image, short_description } = postData as post
+  const { title, content, tags, date_created, image, short_description } =
+    postData as post
 
   return (
     <main className='relative min-h-screen w-full'>
       <div className='relative w-full h-[70vh]'>
         <Image
-          src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${image}` || '/placeholder.svg'}
+          src={
+            `${process.env.NEXT_PUBLIC_URL}/assets/${image}` ||
+            '/placeholder.svg'
+          }
           alt={title}
           fill
           priority
@@ -187,9 +195,7 @@ export default function SinglePost({ params }: { params: Promise<{ slug: string 
             delay: 0.2,
           }}>
           <div className='prose max-w-none'>
-            <p className='lead text-lg  mb-6'>
-              {short_description}
-            </p>
+            <p className='lead text-lg  mb-6'>{short_description}</p>
 
             <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>

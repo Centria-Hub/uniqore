@@ -28,17 +28,17 @@ const POSTS_PER_PAGE = 12
 
 // Fetch articles data
 const fetchArticles = async () => {
-	return directus.request(readItems('articles'))
+  return directus.request(readItems('articles'))
 }
 
 // Fetch articles_tags data
 const fetchArticlesTags = async () => {
-	return directus.request(readItems('articles_tags'))
+  return directus.request(readItems('articles_tags'))
 }
 
 // Fetch tags data
 const fetchTags = async () => {
-	return directus.request(readItems('tags'))
+  return directus.request(readItems('tags'))
 }
 
 // Fetch articles data with tags
@@ -111,7 +111,7 @@ export default function Articles() {
   const allTags = Array.from(
     new Set(blogPosts.flatMap((post) => post.tags))
   ).sort()
-  
+
   // Apply filters and sorting
   useEffect(() => {
     let result = [...blogPosts]
@@ -269,7 +269,10 @@ export default function Articles() {
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_PUBLIC_URL}/assets/${post.image}` || '/placeholder.svg'}
+                    src={
+                      `${process.env.NEXT_PUBLIC_URL}/assets/${post.image}` ||
+                      '/placeholder.svg'
+                    }
                     alt={post.title}
                     fill
                     className='object-cover'
@@ -282,11 +285,14 @@ export default function Articles() {
                       {/* Date */}
                       <div className='backdrop-blur-md bg-black/30 rounded-lg px-3 py-1 self-start'>
                         <span className='text-white text-sm'>
-                          {new Date(post.date_created).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
+                          {new Date(post.date_created).toLocaleDateString(
+                            'en-US',
+                            {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            }
+                          )}
                         </span>
                       </div>
 
