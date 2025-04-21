@@ -4,24 +4,142 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ChevronRight, Calendar, MapPin, DollarSign, Clock } from 'lucide-react'
+import { use, useEffect, useState } from 'react'
+import { readItems } from '@directus/sdk'
+import directus from '@/lib/directus'
+import { notFound } from 'next/navigation'
 
-export default function SinglePost() {
-  const tags = ['Web Development', 'AI', 'Edge Computing']
+type post = {
+  id: number
+  title: string
+  slug: string
+  content: string
+  short_description: string
+  date_created: string
+  image: string
+  tags: string[]
+  time: string
+  location: string
+  fee: string
+  end_time: string
+}
 
-  const eventDetails = {
-    title: 'Future of Web Development Conference',
-    location: 'Tech Hub, San Francisco, CA',
-    price: '$199',
-    date: 'May 15, 2025',
-    startTime: '9:00 AM',
-    endTime: '5:00 PM',
-    description:
-      'Join us for a day of insights and discussions about the future of web development, featuring talks on AI-driven development, edge computing, and more.',
+const fetchEvents = async (slug: string) => {
+  try {
+    return directus.request(
+      readItems('events', {
+        filter: { slug: { _eq: slug } },
+      })
+    )
+  } catch {
+    notFound()
+  }
+}
+
+// Fetch events_tags
+const fetchEventsTags = async () => {
+  return directus.request(readItems('events_tags'))
+}
+
+// Fetch tags
+const fetchTags = async () => {
+  return directus.request(readItems('tags'))
+}
+
+// Fetch events data with tags
+const fetchEventsWithTags = async (slug: string) => {
+  try {
+    const [events, eventsTags, tags] = await Promise.all([
+      fetchEvents(slug),
+      fetchEventsTags(),
+      fetchTags(),
+    ])
+
+    // Map tags to their corresponding tag strings
+    const tagMap = tags.reduce((acc: Record<number, string>, tag: any) => {
+      acc[tag.id] = tag.tag
+      return acc
+    }, {})
+
+    // Map events_tags to events items
+    const eventsWithTags = events.map((item: any) => {
+      const relatedTags = eventsTags
+        .filter((eventsTag: any) => eventsTag.events_id === item.id)
+        .map((eventsTag: any) => tagMap[eventsTag.tags_id] || '')
+
+      return {
+        ...item,
+        tags: relatedTags.filter(Boolean), // Remove empty tags
+      }
+    })
+
+    return eventsWithTags
+  } catch (err) {
+    console.error('Error fetching events with tags:', err)
+    return []
+  }
+}
+
+export default function SinglePost({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = use(params)
+  const slugValue = Array.isArray(slug) ? slug[0] : slug
+  const [postData, setPostData] = useState<post>()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const events = await fetchEventsWithTags(slugValue)
+        if (events.length === 0) {
+          notFound()
+        } else {
+          setPostData(events[0])
+        }
+      } catch (err) {
+        console.error('Error fetching post data:', err)
+        setError('Failed to load post data.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [slugValue])
+
+  if (loading) {
+    return <div>Loading...</div>
   }
 
+  if (error) {
+    return <div>Error: {error}</div>
+  }
+
+  if (!postData) {
+    notFound()
+  }
+
+  const {
+    title,
+    content,
+    tags,
+    date_created,
+    image,
+    short_description,
+    time,
+    location,
+    fee,
+    end_time,
+  } = postData as post
+
   const generateGoogleCalendarUrl = () => {
-    const startDate = new Date('May 15, 2025 09:00:00')
-    const endDate = new Date('May 15, 2025 17:00:00')
+    // Parse event start/end dates
+    const startDate = new Date(postData.time)
+    const endDate = new Date(postData.end_time)
 
     // Format dates for Google Calendar
     const formatDate = (date: Date) => {
@@ -30,9 +148,9 @@ export default function SinglePost() {
 
     const params = new URLSearchParams({
       action: 'TEMPLATE',
-      text: eventDetails.title,
-      details: eventDetails.description,
-      location: eventDetails.location,
+      text: postData.title,
+      //details: postData.description,
+      location: postData.location,
       dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
     })
 
@@ -43,8 +161,11 @@ export default function SinglePost() {
     <main className='relative min-h-screen w-full'>
       <div className='relative w-full h-[70vh]'>
         <Image
-          src='/hero.png'
-          alt='Post featured image'
+          src={
+            `${process.env.NEXT_PUBLIC_URL}/assets/${image}` ||
+            '/placeholder.svg'
+          }
+          alt={title}
           fill
           priority
           className='object-cover blur-[8px]'
@@ -60,21 +181,27 @@ export default function SinglePost() {
               </Link>
               <ChevronRight className='h-4 w-4 mx-2' />
               <Link
-                href='/blog'
+                href='/events'
                 className='hover:text-white transition-colors'>
-                Blog
+                Events
               </Link>
               <ChevronRight className='h-4 w-4 mx-2' />
-              <span className='text-white/70'>Current Post</span>
+              <span className='text-white/70'>{title}</span>
             </nav>
 
             {/* Title */}
             <h1 className='text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center'>
-              The Future of Web Development: Trends to Watch in 2025
+              {title}
             </h1>
 
             {/* Posted date */}
-            <div className='text-white/90 text-sm'>Posted on April 9, 2025</div>
+            <div className='text-white/90 text-sm'>
+              {new Date(date_created).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </div>
 
             {/* Tags */}
             <div className='flex flex-wrap gap-2 justify-center'>
@@ -105,19 +232,23 @@ export default function SinglePost() {
             <div className='flex flex-col gap-2'>
               <div className='flex items-center text-sm '>
                 <Calendar className='h-4 w-4 mr-2' />
-                <span>{eventDetails.date}</span>
+                <span>
+                  {time.split('T')[0].split('-').join('/')} -{' '}
+                  {end_time.split('T')[0].split('-').join('/')}
+                </span>
                 <Clock className='h-4 w-4 ml-4 mr-2' />
                 <span>
-                  {eventDetails.startTime} - {eventDetails.endTime}
+                  {time.split('T')[1].split(':').slice(0, 2).join(':')} -{' '}
+                  {end_time.split('T')[1].split(':').slice(0, 2).join(':')}
                 </span>
               </div>
               <div className='flex items-center text-sm'>
                 <MapPin className='h-4 w-4 mr-2' />
-                <span>{eventDetails.location}</span>
+                <span>{location}</span>
               </div>
               <div className='flex items-center text-sm'>
                 <DollarSign className='h-4 w-4 mr-2' />
-                <span>{eventDetails.price}</span>
+                <span>{fee}</span>
               </div>
             </div>
             <a
@@ -141,59 +272,9 @@ export default function SinglePost() {
             delay: 0.2,
           }}>
           <div className='prose max-w-none'>
-            <p className='lead text-lg  mb-6'>
-              As we move further into 2025, the landscape of web development
-              continues to evolve at a rapid pace. New technologies, frameworks,
-              and methodologies are emerging, reshaping how we build and
-              interact with the web.
-            </p>
+            <p className='lead text-lg  mb-6'>{short_description}</p>
 
-            <p>
-              The past year has seen significant advancements in AI-assisted
-              development, serverless architectures, and immersive web
-              experiences. These innovations are not just changing how
-              developers work but also transforming user expectations.
-            </p>
-
-            <h2 className='text-2xl font-bold mt-8 mb-4'>
-              AI-Driven Development
-            </h2>
-
-            <p>
-              Artificial intelligence has become an indispensable tool in a
-              developer&apos;s arsenal. From code completion to automated testing, AI
-              is streamlining workflows and boosting productivity. Tools like
-              GitHub Copilot and v0 have evolved to understand context better,
-              offering more accurate and relevant suggestions.
-            </p>
-
-            <p>
-              But the real game-changer has been the rise of AI-powered design
-              systems that can translate rough sketches or natural language
-              descriptions into production-ready code. This has democratized web
-              development, allowing non-technical stakeholders to participate
-              more actively in the creation process.
-            </p>
-
-            <h2 className='text-2xl font-bold mt-8 mb-4'>
-              The Rise of Edge Computing
-            </h2>
-
-            <p>
-              Edge computing continues to gain momentum, with more applications
-              leveraging the power of distributed computing to deliver faster,
-              more reliable experiences. By processing data closer to where it&apos;s
-              needed, edge functions reduce latency and improve performance,
-              especially for global audiences.
-            </p>
-
-            <p>
-              Frameworks like Next.js have embraced this paradigm, making it
-              easier than ever to deploy code to the edge. This shift has
-              particularly benefited e-commerce and media sites, where
-              milliseconds can make the difference between conversion and
-              abandonment.
-            </p>
+            <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>
         </motion.div>
       </div>

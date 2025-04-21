@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    domains: ['api.hub.solo-web.studio'],
     remotePatterns: [
       {
         hostname: 'res.cloudinary.com',
@@ -14,6 +15,11 @@ const nextConfig: NextConfig = {
       {
         hostname: 'randomuser.me',
         protocol: 'https',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.hub.solo-web.studio',
+        pathname: '/assets/**',
       },
     ],
   },

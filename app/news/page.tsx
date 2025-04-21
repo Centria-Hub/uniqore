@@ -11,180 +11,106 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import directus from '@/lib/directus'
+import { readItems } from '@directus/sdk'
 
 type post = {
   id: number
   slug: string
   title: string
   image: string
-  date: string
+  date_created: string
   tags: string[]
 }
 
-// Sample blog post data with slugs instead of IDs
-const blogPosts: post[] = [
-  {
-    id: 1,
-    slug: 'future-web-development-trends-2025',
-    title: 'The Future of Web Development: Trends to Watch in 2025',
-    image: '/hero.png',
-    date: '2025-04-09',
-    tags: ['Web Development', 'AI', 'Edge Computing'],
-  },
-  {
-    id: 2,
-    slug: 'building-accessible-uis-best-practices',
-    title: 'Building Accessible UIs: Best Practices for Inclusive Design',
-    image: '/hero.png',
-    date: '2025-03-22',
-    tags: ['Accessibility', 'UI Design', 'Web Development'],
-  },
-  {
-    id: 3,
-    slug: 'rise-of-ai-powered-development-tools',
-    title: 'The Rise of AI-Powered Development Tools',
-    image: '/hero.png',
-    date: '2025-03-15',
-    tags: ['AI', 'Developer Tools', 'Productivity'],
-  },
-  {
-    id: 4,
-    slug: 'optimizing-performance-nextjs-applications',
-    title: 'Optimizing Performance in Next.js Applications',
-    image: '/hero.png',
-    date: '2025-02-28',
-    tags: ['Next.js', 'Performance', 'Web Development'],
-  },
-  {
-    id: 5,
-    slug: 'designing-for-dark-mode-tips-techniques',
-    title: 'Designing for Dark Mode: Tips and Techniques',
-    image: '/hero.png',
-    date: '2025-02-14',
-    tags: ['UI Design', 'Dark Mode', 'CSS'],
-  },
-  {
-    id: 6,
-    slug: 'state-of-typescript-2025',
-    title: 'The State of TypeScript in 2025',
-    image: '/hero.png',
-    date: '2025-01-30',
-    tags: ['TypeScript', 'JavaScript', 'Web Development'],
-  },
-  {
-    id: 7,
-    slug: 'mastering-css-grid-layout',
-    title: 'Mastering CSS Grid Layout',
-    image: '/hero.png',
-    date: '2025-01-15',
-    tags: ['CSS', 'Web Development', 'Layout'],
-  },
-  {
-    id: 8,
-    slug: 'introduction-web-animation-framer-motion',
-    title: 'Introduction to Web Animation with Framer Motion',
-    image: '/hero.png',
-    date: '2024-12-20',
-    tags: ['Animation', 'Framer Motion', 'React'],
-  },
-  {
-    id: 9,
-    slug: 'building-headless-cms-nextjs',
-    title: 'Building a Headless CMS with Next.js',
-    image: '/hero.png',
-    date: '2024-12-05',
-    tags: ['Next.js', 'CMS', 'Web Development'],
-  },
-  {
-    id: 10,
-    slug: 'complete-guide-web-accessibility',
-    title: 'The Complete Guide to Web Accessibility',
-    image: '/hero.png',
-    date: '2024-11-22',
-    tags: ['Accessibility', 'Web Development', 'UI Design'],
-  },
-  {
-    id: 11,
-    slug: 'understanding-web3-blockchain-technology',
-    title: 'Understanding Web3 and Blockchain Technology',
-    image: '/hero.png',
-    date: '2024-11-10',
-    tags: ['Web3', 'Blockchain', 'Technology'],
-  },
-  {
-    id: 12,
-    slug: 'responsive-design-2025-beyond-media-queries',
-    title: 'Responsive Design in 2025: Beyond Media Queries',
-    image: '/hero.png',
-    date: '2024-10-28',
-    tags: ['Responsive Design', 'CSS', 'Web Development'],
-  },
-  {
-    id: 13,
-    slug: 'server-components-future-of-react',
-    title: 'Server Components: The Future of React',
-    image: '/hero.png',
-    date: '2024-10-15',
-    tags: ['React', 'Server Components', 'Web Development'],
-  },
-  {
-    id: 14,
-    slug: 'micro-frontends-architecture-scalable-web-apps',
-    title: 'Micro-Frontends: Architecture for Scalable Web Apps',
-    image: '/hero.png',
-    date: '2024-09-30',
-    tags: ['Architecture', 'Micro-Frontends', 'Web Development'],
-  },
-  {
-    id: 15,
-    slug: 'evolution-javascript-frameworks',
-    title: 'The Evolution of JavaScript Frameworks',
-    image: '/hero.png',
-    date: '2024-09-15',
-    tags: ['JavaScript', 'Frameworks', 'Web Development'],
-  },
-  {
-    id: 16,
-    slug: 'building-realtime-applications-websockets',
-    title: 'Building Real-time Applications with WebSockets',
-    image: '/hero.png',
-    date: '2024-08-28',
-    tags: ['WebSockets', 'Real-time', 'Web Development'],
-  },
-  {
-    id: 17,
-    slug: 'progressive-web-apps-2025',
-    title: 'Progressive Web Apps in 2025',
-    image: '/hero.png',
-    date: '2024-08-15',
-    tags: ['PWA', 'Web Development', 'Mobile'],
-  },
-  {
-    id: 18,
-    slug: 'impact-ai-ux-design',
-    title: 'The Impact of AI on UX Design',
-    image: '/hero.png',
-    date: '2024-07-30',
-    tags: ['AI', 'UX Design', 'UI Design'],
-  },
-]
-
-// Get all unique tags from blog posts
-const allTags = Array.from(
-  new Set(blogPosts.flatMap((post) => post.tags))
-).sort()
-
 // Number of posts per page
 const POSTS_PER_PAGE = 12
+
+// Fetch news data
+const fetchNews = async () => {
+  return directus.request(readItems('news'))
+}
+
+// Fetch news_tags data
+const fetchNewsTags = async () => {
+  return directus.request(readItems('news_tags'))
+}
+
+// Fetch tags data
+const fetchTags = async () => {
+  return directus.request(readItems('tags'))
+}
+
+// Fetch news data with tags
+const fetchNewsWithTags = async () => {
+  try {
+    const [news, newsTags, tags] = await Promise.all([
+      fetchNews(),
+      fetchNewsTags(),
+      fetchTags(),
+    ])
+
+    // Map tags to their corresponding tag strings
+    const tagMap = tags.reduce((acc: Record<number, string>, tag: any) => {
+      acc[tag.id] = tag.tag
+      return acc
+    }, {})
+
+    // Map news_tags to news items
+    const newsWithTags = news.map((item: any) => {
+      const relatedTags = newsTags
+        .filter((newsTag: any) => newsTag.news_id === item.id)
+        .map((newsTag: any) => tagMap[newsTag.tags_id] || '')
+
+      return {
+        ...item,
+        tags: relatedTags.filter(Boolean), // Remove empty tags
+      }
+    })
+
+    return newsWithTags
+  } catch (err) {
+    console.error('Error fetching news with tags:', err)
+    return []
+  }
+}
 
 export default function News() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false)
-  const [filteredPosts, setFilteredPosts] = useState(blogPosts)
+  const [blogPosts, setBlogPost] = useState<post[]>([])
+  const [filteredPosts, setFilteredPosts] = useState<post[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [displayedPosts, setDisplayedPosts] = useState<post[]>([])
+
+  // Retreive news data
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        const data = await fetchNewsWithTags()
+        setBlogPost(
+          data.map((item: Record<string, any>) => ({
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            image: item.image,
+            date_created: item.date_created,
+            tags: item.tags,
+          }))
+        )
+      } catch (err: any) {
+        console.error('Error fetching news:', err)
+      }
+    }
+    loadNews()
+  }, [])
+
+  // Get all unique tags from blog posts
+  const allTags = Array.from(
+    new Set(blogPosts.flatMap((post) => post.tags))
+  ).sort()
 
   // Apply filters and sorting
   useEffect(() => {
@@ -199,15 +125,15 @@ export default function News() {
 
     // Sort by date
     result.sort((a, b) => {
-      const dateA = new Date(a.date).getTime()
-      const dateB = new Date(b.date).getTime()
+      const dateA = new Date(a.date_created).getTime()
+      const dateB = new Date(b.date_created).getTime()
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB
     })
 
     setFilteredPosts(result)
     setTotalPages(Math.ceil(result.length / POSTS_PER_PAGE))
     setCurrentPage(1) // Reset to first page when filters change
-  }, [selectedTags, sortOrder])
+  }, [blogPosts, selectedTags, sortOrder])
 
   // Update displayed posts when page or filtered posts change
   useEffect(() => {
@@ -338,12 +264,15 @@ export default function News() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}>
               <Link
-                href={`/post/${post.slug}`}
+                href={`/news/${post.slug}`}
                 className='block h-full'>
                 <div className='relative rounded-lg overflow-hidden shadow-md h-64 hover:shadow-lg transition-shadow duration-300'>
                   {/* Full-size image background */}
                   <Image
-                    src={post.image || '/placeholder.svg'}
+                    src={
+                      `${process.env.NEXT_PUBLIC_URL}/assets/${post.image}` ||
+                      '/placeholder.svg'
+                    }
                     alt={post.title}
                     fill
                     className='object-cover'
@@ -356,11 +285,14 @@ export default function News() {
                       {/* Date */}
                       <div className='backdrop-blur-md bg-black/30 rounded-lg px-3 py-1 self-start'>
                         <span className='text-white text-sm'>
-                          {new Date(post.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
+                          {new Date(post.date_created).toLocaleDateString(
+                            'en-US',
+                            {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            }
+                          )}
                         </span>
                       </div>
 
